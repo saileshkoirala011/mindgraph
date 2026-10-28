@@ -47,7 +47,7 @@ async def extract(
     filename = image.filename if image else None
     file_hash = hashlib.sha256(raw).hexdigest() if raw else None
 
-    result = get_client().extract(raw, text)
+    result = get_client().extract(raw, text)   # get_client() re-checks META_API_KEY each call
     rows = result.get("rows", [])
     page_total = result.get("page_total")
 
