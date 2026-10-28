@@ -147,23 +147,66 @@ def save_transactions(body: SaveRequest):
 
 
 # ---------------------------------------------------------------------------
-# /api/transactions  – list recent (simple ledger read)
+# /api/transactions  – list (searchable ledger)
 # ---------------------------------------------------------------------------
 
 @app.get("/api/transactions")
-def list_transactions(limit: int = 100):
+def list_transactions(
+    limit: int = 200,
+    q: str | None = None,       # search across customer / item / date
+    kind: str | None = None,    # filter by kind
+):
     with get_conn() as conn:
-        rows = conn.execute(
-            """
+        base = """
             SELECT t.id, c.name AS customer, t.date, t.item, t.amount, t.kind, t.created_at
             FROM transactions t
             LEFT JOIN customers c ON c.id = t.customer_id
-            ORDER BY t.created_at DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
+        """
+        filters, params = [], []
+        if q:
+            filters.append("(lower(c.name) LIKE ? OR lower(t.item) LIKE ? OR t.date LIKE ?)")
+            pq = f"%{q.lower()}%"
+            params.extend([pq, pq, pq])
+        if kind:
+            filters.append("t.kind = ?")
+            params.append(kind)
+        if filters:
+            base += " WHERE " + " AND ".join(filters)
+        base += " ORDER BY t.date DESC, t.created_at DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(base, params).fetchall()
     return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# /api/summary  – totals for the overview cards
+# ---------------------------------------------------------------------------
+
+@app.get("/api/summary")
+def summary():
+    with get_conn() as conn:
+        def total(kind):
+            r = conn.execute(
+                "SELECT COALESCE(SUM(amount),0) AS s FROM transactions WHERE kind=?",
+                (kind,),
+            ).fetchone()
+            return float(r["s"])
+
+        income    = total("sale") + total("payment")
+        expenses  = total("expense")
+        credit    = total("credit")   # money owed to the shop
+
+        tx_count = conn.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"]
+        cust_count = conn.execute("SELECT COUNT(*) AS n FROM customers").fetchone()["n"]
+
+    return {
+        "income":    income,
+        "expenses":  expenses,
+        "credit":    credit,
+        "net":       income - expenses,
+        "tx_count":  tx_count,
+        "cust_count": cust_count,
+    }
 
 
 # ---------------------------------------------------------------------------

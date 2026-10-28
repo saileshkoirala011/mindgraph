@@ -3,95 +3,237 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MindGraph AI — Ledger Upload</title>
+  <title>MindGraph AI</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
-<header>
-  <h1>MindGraph AI</h1>
-  <span>Handwritten ledger reader</span>
-</header>
+<!-- ═══════════════════════════════════════════════════════ NAV ══ -->
+<nav class="topnav" role="navigation" aria-label="Main navigation">
+  <span class="topnav-brand">Mind<span>Graph</span></span>
+  <div class="topnav-links">
+    <a href="#overview"     class="nav-link active" data-section="overview"
+       data-en="Overview"   data-np="सारांश">Overview</a>
+    <a href="#transactions" class="nav-link"        data-section="transactions"
+       data-en="Transactions" data-np="कारोबार">Transactions</a>
+    <a href="#add"          class="nav-link"        data-section="add"
+       data-en="Add Entry"  data-np="प्रविष्टि थप्नुहोस्">Add Entry</a>
+  </div>
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button id="lang-en" class="active" onclick="setLang('en')">EN</button>
+    <button id="lang-np"               onclick="setLang('np')">NP</button>
+  </div>
+</nav>
 
+<!-- ═══════════════════════════════════════════════════ SECTIONS ══ -->
 <main>
 
-  <!-- ── Step 1: Upload ── -->
-  <section class="card" id="upload-section">
-    <h2>1 · Upload a ledger page</h2>
+  <!-- ─────────────────────────────────── OVERVIEW ── -->
+  <section id="overview" class="page" role="main">
 
-    <div id="drop-zone" role="button" tabindex="0"
-         aria-label="Upload ledger image or drop it here">
-      <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.webp" />
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-           stroke="#6e6e73" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-      </svg>
-      <p>Click to choose an image or drag &amp; drop here</p>
-      <p id="file-name" style="margin-top:6px;font-weight:500;color:#1d1d1f;"></p>
+    <div class="stats-grid" id="stats-grid">
+      <!-- filled by JS -->
+      <div class="stat-card"><div class="label">—</div><div class="value"><span class="spinner spinner-dark"></span></div></div>
     </div>
 
-    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;">
-      <button class="btn btn-primary" id="extract-btn" disabled>
-        Extract rows
-      </button>
-      <span id="extract-status" style="font-size:13px;color:#6e6e73;"></span>
+    <div class="card">
+      <div class="card-title" data-en="Recent Transactions" data-np="हालका कारोबारहरू">Recent Transactions</div>
+      <div id="recent-list"><div class="empty-state"><span class="spinner spinner-dark"></span></div></div>
+      <div style="margin-top:14px;">
+        <a href="#transactions" class="nav-link btn btn-ghost btn-sm"
+           data-section="transactions"
+           data-en="View all →" data-np="सबै हेर्नुहोस् →">View all →</a>
+      </div>
     </div>
+
   </section>
 
-  <!-- ── Step 2: Confirm ── -->
-  <section class="card" id="confirm-section" hidden>
-    <h2>2 · Confirm and edit extracted rows</h2>
+  <!-- ─────────────────────────────── TRANSACTIONS ── -->
+  <section id="transactions" class="page" hidden>
 
-    <!-- Issues banner (shown only when there are issues) -->
-    <div id="issues-banner" hidden></div>
+    <div class="card">
+      <div class="toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input id="tx-search" type="search" placeholder="Search customer, item, date…"
+                 data-placeholder-en="Search customer, item, date…"
+                 data-placeholder-np="ग्राहक, वस्तु, मिति खोज्नुहोस्…"
+                 aria-label="Search transactions" autocomplete="off" />
+        </div>
+        <select id="tx-kind-filter" class="kind-filter" aria-label="Filter by kind">
+          <option value=""    data-en="All types"  data-np="सबै प्रकार">All types</option>
+          <option value="sale"    data-en="Sale"    data-np="बिक्री">Sale</option>
+          <option value="credit"  data-en="Credit"  data-np="उधारो">Credit</option>
+          <option value="payment" data-en="Payment" data-np="भुक्तानी">Payment</option>
+          <option value="expense" data-en="Expense" data-np="खर्च">Expense</option>
+        </select>
+      </div>
 
-    <!-- Totals bar -->
-    <div class="totals-bar" id="totals-bar"></div>
-
-    <!-- Editable table -->
-    <div class="table-wrap" style="margin-top:12px;">
-      <table id="rows-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Date</th>
-            <th>Customer</th>
-            <th>Item</th>
-            <th>Amount</th>
-            <th>Kind</th>
-            <th>Conf.</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="rows-body"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table aria-label="Transactions">
+          <thead>
+            <tr>
+              <th data-en="Date"     data-np="मिति">Date</th>
+              <th data-en="Customer" data-np="ग्राहक">Customer</th>
+              <th data-en="Item"     data-np="वस्तु">Item</th>
+              <th data-en="Amount"   data-np="रकम">Amount (रु)</th>
+              <th data-en="Type"     data-np="प्रकार">Type</th>
+            </tr>
+          </thead>
+          <tbody id="tx-body">
+            <tr><td colspan="5" class="empty-state">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="tx-count" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
     </div>
 
-    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-      <button class="btn btn-primary" id="save-btn">Save to ledger</button>
-      <button class="btn btn-ghost"   id="add-row-btn">+ Add row</button>
-      <button class="btn btn-ghost"   id="reupload-btn">← Upload another</button>
-      <label style="font-size:13px;color:#6e6e73;margin-left:auto;display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="force-save" />
-        Save anyway (ignore warnings)
-      </label>
-    </div>
   </section>
 
-  <!-- ── Step 3: Success ── -->
-  <section class="card" id="success-section" hidden>
-    <h2>✓ Saved</h2>
-    <p id="success-msg" style="margin-top:8px;color:#3a3a3c;font-size:14px;"></p>
-    <div style="margin-top:16px;display:flex;gap:12px;">
-      <button class="btn btn-primary" id="another-btn">Upload another page</button>
-      <a href="/dashboard.html" class="btn btn-ghost">View dashboard →</a>
-    </div>
+  <!-- ──────────────────────────────────── ADD ENTRY ── -->
+  <section id="add" class="page" hidden>
+
+    <div class="card">
+      <div class="card-title" data-en="Add a Transaction" data-np="कारोबार थप्नुहोस्">Add a Transaction</div>
+
+      <!-- Tabs: Manual / AI Extract -->
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" role="tab" id="tab-manual" aria-selected="true"
+                data-en="Manual Entry" data-np="हाते प्रविष्टि"
+                onclick="switchTab('manual')">Manual Entry</button>
+        <button class="tab-btn" role="tab" id="tab-ai" aria-selected="false"
+                data-en="AI Extraction" data-np="एआई निकासी"
+                onclick="switchTab('ai')">AI Extraction</button>
+      </div>
+
+      <!-- ── Manual entry form ── -->
+      <div id="panel-manual" role="tabpanel" aria-labelledby="tab-manual">
+        <form id="manual-form" onsubmit="submitManual(event)" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="m-date" data-en="Date" data-np="मिति">Date</label>
+              <input type="date" id="m-date" required />
+            </div>
+            <div class="form-group">
+              <label for="m-kind" data-en="Type" data-np="प्रकार">Type</label>
+              <select id="m-kind" required>
+                <option value="sale"    data-en="Sale"    data-np="बिक्री">Sale</option>
+                <option value="credit"  data-en="Credit"  data-np="उधारो">Credit</option>
+                <option value="payment" data-en="Payment" data-np="भुक्तानी">Payment</option>
+                <option value="expense" data-en="Expense" data-np="खर्च">Expense</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="m-customer" data-en="Customer / Party" data-np="ग्राहक / पक्ष">Customer / Party</label>
+            <input type="text" id="m-customer" required
+                   placeholder="Name"
+                   data-placeholder-en="Name"
+                   data-placeholder-np="नाम" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="m-item" data-en="Item / Description" data-np="वस्तु / विवरण">Item / Description</label>
+              <input type="text" id="m-item"
+                     placeholder="Optional"
+                     data-placeholder-en="Optional"
+                     data-placeholder-np="ऐच्छिक" />
+            </div>
+            <div class="form-group">
+              <label for="m-amount" data-en="Amount (रु)" data-np="रकम (रु)">Amount (रु)</label>
+              <input type="number" id="m-amount" min="0" step="0.01" required
+                     placeholder="0.00" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="manual-save-btn"
+                  data-en="Save Transaction" data-np="कारोबार सुरक्षित गर्नुहोस्">
+            Save Transaction
+          </button>
+        </form>
+      </div>
+
+      <!-- ── AI extraction panel ── -->
+      <div id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" style="display:none;">
+
+        <!-- Step 1: upload -->
+        <div id="ai-upload-step">
+          <div class="drop-zone" id="drop-zone" role="button" tabindex="0"
+               aria-label="Upload ledger image">
+            <input type="file" id="file-input" accept="image/*" />
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            <p data-en="Click to choose an image or drag &amp; drop"
+               data-np="तस्बिर छान्नुहोस् वा यहाँ तान्नुहोस्">
+              Click to choose an image or drag &amp; drop</p>
+            <p id="ai-file-name" style="font-weight:500;color:var(--text);margin-top:6px;"></p>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-primary" id="extract-btn" disabled
+                    data-en="Extract rows" data-np="पङ्क्तिहरू निकाल्नुहोस्">
+              Extract rows
+            </button>
+            <span id="extract-status" style="font-size:13px;color:var(--muted);"></span>
+          </div>
+        </div>
+
+        <!-- Step 2: confirm extracted rows -->
+        <div id="confirm-section">
+          <div id="issues-banner" hidden></div>
+          <div class="totals-bar" id="totals-bar"></div>
+
+          <div class="table-wrap" style="margin-top:12px;">
+            <table aria-label="Extracted rows">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th data-en="Date"     data-np="मिति">Date</th>
+                  <th data-en="Customer" data-np="ग्राहक">Customer</th>
+                  <th data-en="Item"     data-np="वस्तु">Item</th>
+                  <th data-en="Amount"   data-np="रकम">Amount (रु)</th>
+                  <th data-en="Type"     data-np="प्रकार">Type</th>
+                  <th data-en="Conf."    data-np="विश्वास">Conf.</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="extracted-body"></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary" id="save-btn"
+                    data-en="Save to ledger" data-np="बहीखातामा सुरक्षित गर्नुहोस्">
+              Save to ledger
+            </button>
+            <button class="btn btn-ghost" id="add-row-btn"
+                    data-en="+ Add row" data-np="+ पङ्क्ति थप्नुहोस्">
+              + Add row
+            </button>
+            <button class="btn btn-ghost" id="reextract-btn"
+                    data-en="← Upload another" data-np="← अर्को अपलोड गर्नुहोस्">
+              ← Upload another
+            </button>
+            <label style="font-size:13px;color:var(--muted);margin-left:auto;display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="force-save" />
+              <span data-en="Save anyway (ignore warnings)"
+                    data-np="फेरि पनि सुरक्षित गर्नुहोस्">Save anyway (ignore warnings)</span>
+            </label>
+          </div>
+        </div>
+
+      </div><!-- /panel-ai -->
+    </div><!-- /card -->
+
   </section>
 
 </main>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <script src="/app.js"></script>
 </body>
 </html>
