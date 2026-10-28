@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindGraph AI — Dashboard</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+  <h1>MindGraph AI</h1>
+  <span>Dashboard</span>
+  <a href="/" style="margin-left:auto;font-size:13px;">← Upload</a>
+</header>
+<main>
+  <section class="card">
+    <h2>Recent transactions</h2>
+    <div id="tx-list"><div class="empty-state">Loading…</div></div>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
+async function load() {
+  const res  = await fetch("/api/transactions?limit=200");
+  const rows = await res.json();
+  const el   = document.getElementById("tx-list");
+  if (!rows.length) { el.innerHTML = '<div class="empty-state">No transactions yet.</div>'; return; }
+  el.innerHTML = `
+    <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Date</th><th>Customer</th><th>Item</th>
+        <th>Amount</th><th>Kind</th><th>Saved at</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr>
+          <td>${r.date||""}</td>
+          <td>${r.customer||""}</td>
+          <td>${r.item||""}</td>
+          <td>${(+r.amount).toFixed(2)}</td>
+          <td><span class="kind-badge kind-${r.kind}">${r.kind}</span></td>
+          <td style="color:#6e6e73;font-size:12px;">${r.created_at?.slice(0,16)||""}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    </div>`;
+}
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindGraph AI — Ledger Upload</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<header>
+  <h1>MindGraph AI</h1>
+  <span>Handwritten ledger reader</span>
+</header>
+
+<main>
+
+  <!-- ── Step 1: Upload ── -->
+  <section class="card" id="upload-section">
+    <h2>1 · Upload a ledger page</h2>
+
+    <div id="drop-zone" role="button" tabindex="0"
+         aria-label="Upload ledger image or drop it here">
+      <input type="file" id="file-input" accept="image/*,.jpg,.jpeg,.png,.webp" />
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+           stroke="#6e6e73" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+      </svg>
+      <p>Click to choose an image or drag &amp; drop here</p>
+      <p id="file-name" style="margin-top:6px;font-weight:500;color:#1d1d1f;"></p>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;">
+      <button class="btn btn-primary" id="extract-btn" disabled>
+        Extract rows
+      </button>
+      <span id="extract-status" style="font-size:13px;color:#6e6e73;"></span>
+    </div>
+  </section>
+
+  <!-- ── Step 2: Confirm ── -->
+  <section class="card" id="confirm-section" hidden>
+    <h2>2 · Confirm and edit extracted rows</h2>
+
+    <!-- Issues banner (shown only when there are issues) -->
+    <div id="issues-banner" hidden></div>
+
+    <!-- Totals bar -->
+    <div class="totals-bar" id="totals-bar"></div>
+
+    <!-- Editable table -->
+    <div class="table-wrap" style="margin-top:12px;">
+      <table id="rows-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Item</th>
+            <th>Amount</th>
+            <th>Kind</th>
+            <th>Conf.</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows-body"></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-primary" id="save-btn">Save to ledger</button>
+      <button class="btn btn-ghost"   id="add-row-btn">+ Add row</button>
+      <button class="btn btn-ghost"   id="reupload-btn">← Upload another</button>
+      <label style="font-size:13px;color:#6e6e73;margin-left:auto;display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="force-save" />
+        Save anyway (ignore warnings)
+      </label>
+    </div>
+  </section>
+
+  <!-- ── Step 3: Success ── -->
+  <section class="card" id="success-section" hidden>
+    <h2>✓ Saved</h2>
+    <p id="success-msg" style="margin-top:8px;color:#3a3a3c;font-size:14px;"></p>
+    <div style="margin-top:16px;display:flex;gap:12px;">
+      <button class="btn btn-primary" id="another-btn">Upload another page</button>
+      <a href="/dashboard.html" class="btn btn-ghost">View dashboard →</a>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>
